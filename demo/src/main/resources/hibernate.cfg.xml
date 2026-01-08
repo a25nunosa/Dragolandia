@@ -1,0 +1,33 @@
+<!DOCTYPE hibernate-configuration PUBLIC
+        "-//Hibernate/Hibernate Configuration DTD 3.0//EN"
+        "http://hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+<hibernate-configuration>
+    <session-factory>
+        <!-- Conexión JDBC a MySQL en Docker -->
+        <property name="hibernate.connection.driver_class">com.mysql.cj.jdbc.Driver</property>
+        <property name="hibernate.connection.url">jdbc:mysql://localhost:3306/dragolandia</property>
+        <property name="hibernate.connection.username">dam2user</property>
+        <property name="hibernate.connection.password">1234..</property>
+
+        <!-- Dialecto de MySQL -->
+        <property name="hibernate.dialect">org.hibernate.dialect.MySQLDialect</property>
+
+        <!-- Configuraciones de Hibernate -->
+        <property name="hibernate.hbm2ddl.auto">update</property> <!-- Hibernate crea/actualiza automaticamente las tablas -->
+        <property name="hibernate.show_sql">true</property>
+        <property name="hibernate.format_sql">true</property>
+
+
+        <!-- Para que funcione el método getCurrentSession en el aula 21 -->
+        <property name="hibernate.current_session_context_class">thread</property>
+
+
+        <!-- Registrar entidades -->
+        <mapping class="com.example.Mago"/>
+        <mapping class="com.example.Monstruo"/>
+        <mapping class="com.example.Bosque"/>
+        <mapping class="com.example.Dragon"/>
+        <mapping class="com.example.Hechizo"/>
+        
+    </session-factory>
+</hibernate-configuration>
