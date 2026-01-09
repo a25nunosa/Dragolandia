@@ -1,4 +1,4 @@
-package com.example;
+package com.example.Entidades;
 
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.Entity;

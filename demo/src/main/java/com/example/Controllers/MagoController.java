@@ -1,4 +1,8 @@
-package com.example;
+package com.example.Controllers;
+
+import com.example.Entidades.Mago;
+import com.example.HibernateUtil;
+import com.example.MenuConsola;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;

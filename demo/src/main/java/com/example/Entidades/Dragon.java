@@ -1,4 +1,4 @@
-package com.example;
+package com.example.Entidades;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -66,5 +66,9 @@ public class Dragon {
     public void recibirDaño(int d) {
         resistencia -= d;
         if (resistencia < 0) resistencia = 0;
+    }
+
+    public boolean estaVivo() {
+        return resistencia > 0;
     }
 }

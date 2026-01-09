@@ -2,13 +2,18 @@ package com.example;
 
 import java.util.Scanner;
 
+import com.example.Controllers.BosqueController;
+import com.example.Controllers.Controller;
+import com.example.Controllers.DragonController;
+import com.example.Controllers.MagoController;
+import com.example.Controllers.MonstruoController;
+
 public class MenuConsola {
     private Scanner scanner;
     private MagoController magoController;
     private MonstruoController monstruoController;
     private BosqueController bosqueController;
     private DragonController dragonController;
-    private Controller controller;
 
     public MenuConsola() {
         this.scanner = new Scanner(System.in);
@@ -16,7 +21,6 @@ public class MenuConsola {
         this.monstruoController = new MonstruoController(this);
         this.bosqueController = new BosqueController(this);
         this.dragonController = new DragonController(this);
-        this.controller = new Controller(this);
     }
 
     public void iniciar() {
@@ -28,7 +32,7 @@ public class MenuConsola {
             
             switch (opcion) {
                 case 1 -> menuGestion();
-                case 2 -> menuBatalla();
+                case 2 -> iniciarNuevaPartida();
                 case 3 -> {
                     mostrarMensaje("¡Hasta luego!");
                     salir = true;
@@ -40,7 +44,7 @@ public class MenuConsola {
 
     private void mostrarMenuPrincipal() {
         System.out.println("╔════════════════════════════════════╗");
-        System.out.println("║       🐉 DRAGOLANDIA 🧙‍♂️            ║");
+        System.out.println("║         DRAGOLANDIA                  ║");
         System.out.println("╚════════════════════════════════════╝");
         System.out.println();
         System.out.println("  1. Gestión de Personajes");
@@ -79,22 +83,22 @@ public class MenuConsola {
         }
     }
 
-    private void menuBatalla() {
+
+
+    private void iniciarNuevaPartida() {
         limpiarConsola();
-        System.out.println("╔════════════════════════════════════╗");
-        System.out.println("║           ⚔️ BATALLA ⚔️            ║");
-        System.out.println("╚════════════════════════════════════╝");
-        System.out.println();
-        controller.pelear();
+        Controller controller = new Controller(this);
+        controller.setupInicial();
+        controller.jugar();
         pausa();
     }
 
     public void mostrarMensaje(String mensaje) {
-        System.out.println("→ " + mensaje);
+        System.out.println("[INFO] " + mensaje);
     }
 
     public void mostrarError(String error) {
-        System.out.println("✗ ERROR: " + error);
+        System.out.println("[ERROR] " + error);
         pausa();
     }
 
@@ -136,10 +140,6 @@ public class MenuConsola {
 
     public Scanner getScanner() {
         return scanner;
-    }
-
-    public Controller getController() {
-        return controller;
     }
 
     public MagoController getMagoController() {

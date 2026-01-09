@@ -1,4 +1,4 @@
-package com.example;
+package com.example.Entidades;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,7 +10,7 @@ import jakarta.persistence.Table;
 @Table(name="Monstruo")
 public class Monstruo {
 
-    enum TipoMonstruo {
+    public enum TipoMonstruo {
         OGRO, TROLL, ESPECTRO
     }
 
@@ -108,6 +108,7 @@ public class Monstruo {
             return vida > 0;
         }
 
+        @Override
         public String toString() {
             return "nombre: " + nombre + ", tipo: " + tipo + ", vida: " + vida + ", fuerza: " + fuerza;
         }

@@ -1,4 +1,4 @@
-package com.example;
+package com.example.Entidades;
 
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
