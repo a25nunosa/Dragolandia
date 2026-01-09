@@ -5,127 +5,140 @@ import jakarta.persistence.EntityTransaction;
 
 public class Controller {
 
-    private Vista vista;
-    private MagoController magoController;
-    private MonstruoController monstruoController;
-    private BosqueController bosqueController;
-    private DragonController dragonController;
-    private Hechizo hechizo;
+    private MenuConsola menu;
 
-public Controller(Vista vista) {
-        this.vista = vista;
-        this.magoController = new MagoController(vista);
-        this.monstruoController = new MonstruoController(vista);
-        this.bosqueController = new BosqueController(vista);
-        this.dragonController = new DragonController(vista);
-
-        // al pulsar el botón GUARDAR
-        vista.getBtnCrear().addActionListener(e -> guardar());
-
-        // al pulsar el botón BATALLA
-        vista.getBtnBatalla().addActionListener(e -> pelear());
-
-        // acciones de gestión (eliminar/editar)
-        vista.getBtnEliminarMago().addActionListener(e -> magoController.eliminarMago());
-        vista.getBtnModificarMago().addActionListener(e -> magoController.modificarMago());
-        vista.getBtnEliminarBosque().addActionListener(e -> bosqueController.eliminarBosque());
-        vista.getBtnModificarBosque().addActionListener(e -> bosqueController.modificarBosque());
-        vista.getBtnEliminarDragon().addActionListener(e -> dragonController.eliminarDragon());
-        vista.getBtnModificarDragon().addActionListener(e -> dragonController.modificarDragon());
-
-        // cargar inicialmente listas desde BD
-        cargarListas();
+    public Controller(MenuConsola menu) {
+        this.menu = menu;
     }
 
-    private void guardar() {
-        EntityManager em = HibernateUtil.getEntityManager();
-        EntityTransaction tx = em.getTransaction();
-        tx.begin();
-
-        magoController.guardarMago(em);
-        monstruoController.guardarMonstruo(em);
-        dragonController.guardarDragon(em);
-        bosqueController.guardarBosque(em);
-
-        tx.commit();
-        em.close();
-
-        cargarListas();
-    }
-
-    private void pelear() {
+    public void pelear() {
         EntityManager em = HibernateUtil.getEntityManager();
         try {
-            // obtener selecciones desde combos
-            Mago m = null; Monstruo mo = null; Bosque b = null; Dragon d = null;
-            try {
-                String sm = (String) vista.getCbSelMago().getSelectedItem();
-                if (sm != null && sm.contains(" - ")) m = em.find(Mago.class, Integer.parseInt(sm.split(" - ")[0]));
-            } catch (Exception ex) {}
-            try {
-                String sm = (String) vista.getCbSelMonstruo().getSelectedItem();
-                if (sm != null && sm.contains(" - ")) mo = em.find(Monstruo.class, Integer.parseInt(sm.split(" - ")[0]));
-            } catch (Exception ex) {}
-            try {
-                String sm = (String) vista.getCbSelBosque().getSelectedItem();
-                if (sm != null && sm.contains(" - ")) b = em.find(Bosque.class, Integer.parseInt(sm.split(" - ")[0]));
-            } catch (Exception ex) {}
-            try {
-                String sm = (String) vista.getCbSelDragon().getSelectedItem();
-                if (sm != null && sm.contains(" - ")) d = em.find(Dragon.class, Integer.parseInt(sm.split(" - ")[0]));
-            } catch (Exception ex) {}
-
-            if (m == null || mo == null) {
-                vista.mostrarResultado("Selecciona al menos un mago y un monstruo para la pelea.");
+            System.out.println();
+            System.out.println("Selecciona un Mago:");
+            java.util.List<Mago> magos = em.createQuery("from Mago", Mago.class).getResultList();
+            if (magos.isEmpty()) {
+                menu.mostrarError("No hay magos registrados");
                 return;
             }
-
-            // asociar dragon al bosque si se ha seleccionado
-            if (b != null && d != null) {
-                EntityTransaction tx2 = em.getTransaction();
-                tx2.begin();
-                b.setDragon(d);
-                em.merge(b);
-                tx2.commit();
+            
+            for (int i = 0; i < magos.size(); i++) {
+                System.out.println("  " + (i + 1) + ". " + magos.get(i).getNombre());
             }
-
-            //pelea
-            vista.mostrarResultado("Inicia la pelea entre Mago: " + m.getNombre() + " y Monstruo: " + mo.getNombre());
+            System.out.print("Opción: ");
+            int magoOpt = menu.leerOpcion();
+            if (magoOpt < 1 || magoOpt > magos.size()) {
+                menu.mostrarError("Opción inválida");
+                return;
+            }
+            Mago m = magos.get(magoOpt - 1);
+            
+            System.out.println();
+            System.out.println("Selecciona un Monstruo:");
+            java.util.List<Monstruo> monstruos = em.createQuery("from Monstruo", Monstruo.class).getResultList();
+            if (monstruos.isEmpty()) {
+                menu.mostrarError("No hay monstruos registrados");
+                return;
+            }
+            
+            for (int i = 0; i < monstruos.size(); i++) {
+                System.out.println("  " + (i + 1) + ". " + monstruos.get(i).getNombre());
+            }
+            System.out.print("Opción: ");
+            int monOpt = menu.leerOpcion();
+            if (monOpt < 1 || monOpt > monstruos.size()) {
+                menu.mostrarError("Opción inválida");
+                return;
+            }
+            Monstruo mo = monstruos.get(monOpt - 1);
+            
+            System.out.println();
+            System.out.println("¿Deseas añadir un Dragón? (1=Sí, 0=No)");
+            int dragOpt = menu.leerOpcion();
+            Dragon d = null;
+            Bosque b = null;
+            
+            if (dragOpt == 1) {
+                java.util.List<Dragon> dragones = em.createQuery("from Dragon", Dragon.class).getResultList();
+                java.util.List<Bosque> bosques = em.createQuery("from Bosque", Bosque.class).getResultList();
+                
+                if (!dragones.isEmpty() && !bosques.isEmpty()) {
+                    System.out.println("Selecciona un Bosque:");
+                    for (int i = 0; i < bosques.size(); i++) {
+                        System.out.println("  " + (i + 1) + ". " + bosques.get(i).getNombre());
+                    }
+                    System.out.print("Opción: ");
+                    int bosOpt = menu.leerOpcion();
+                    if (bosOpt > 0 && bosOpt <= bosques.size()) {
+                        b = bosques.get(bosOpt - 1);
+                        
+                        System.out.println("Selecciona un Dragón:");
+                        for (int i = 0; i < dragones.size(); i++) {
+                            System.out.println("  " + (i + 1) + ". " + dragones.get(i).getNombre());
+                        }
+                        System.out.print("Opción: ");
+                        int drOpt = menu.leerOpcion();
+                        if (drOpt > 0 && drOpt <= dragones.size()) {
+                            d = dragones.get(drOpt - 1);
+                            EntityTransaction tx = em.getTransaction();
+                            tx.begin();
+                            b.setDragon(d);
+                            em.merge(b);
+                            tx.commit();
+                        }
+                    }
+                }
+            }
+            
+            // Batalla
+            System.out.println();
+            System.out.println("╔════════════════════════════════════╗");
+            System.out.println("║        ⚔️ BATALLA INICIADA ⚔️      ║");
+            System.out.println("╚════════════════════════════════════╝");
+            System.out.println("Mago: " + m.getNombre() + " (Vida: " + m.getVida() + ")");
+            System.out.println("Monstruo: " + mo.getNombre() + " (Vida: " + mo.getVida() + ")");
+            if (d != null) System.out.println("Dragón: " + d.getNombre());
+            System.out.println();
+            
             while (m.estaVivo() && mo.estaVivo()) {
-                // lanzar primer hechizo conocido (si hay)
+                // Mago ataca
                 if (!m.getConjuros().isEmpty()) {
                     Hechizo h = m.getConjuros().get(0);
                     m.lanzarHechizo(mo, h);
+                    System.out.println(m.getNombre() + " lanza " + h.getNombreHechizo() + " a " + mo.getNombre());
                 } else {
-                    vista.mostrarResultado(m.getNombre() + " no conoce hechizos. Penalty -1 vida");
+                    System.out.println(m.getNombre() + " no tiene hechizos y pierde 1 vida");
                     m.recibirDaño(1);
                 }
+                System.out.println("  " + mo.getNombre() + " vida: " + Math.max(0, mo.getVida()));
+                
                 if (!mo.estaVivo()) break;
+                
+                // Monstruo ataca
                 mo.atacar(m);
-                // si hay dragon en el bosque, ataca al monstruo
+                System.out.println(mo.getNombre() + " ataca a " + m.getNombre());
+                System.out.println("  " + m.getNombre() + " vida: " + Math.max(0, m.getVida()));
+                
+                // Dragón ataca
                 if (b != null && b.getDragon() != null) {
                     b.getDragon().exhalar(mo);
+                    System.out.println("  " + mo.getNombre() + " vida: " + Math.max(0, mo.getVida()));
                 }
+                
+                System.out.println();
             }
-
-            if (m.estaVivo()) vista.mostrarResultado("El mago ganó la batalla."); else vista.mostrarResultado("El monstruo ganó la batalla.");
+            
+            System.out.println("╔════════════════════════════════════╗");
+            if (m.estaVivo()) {
+                System.out.println("║       ✨ ¡MAGO GANADOR! ✨        ║");
+            } else {
+                System.out.println("║    ✨ ¡MONSTRUO GANADOR! ✨      ║");
+            }
+            System.out.println("╚════════════════════════════════════╝");
         } finally {
             em.close();
         }
     }
-
-    private void cargarListas() {
-        EntityManager em = HibernateUtil.getEntityManager();
-        try {
-            magoController.cargarMagos(em);
-            monstruoController.cargarMonstruos(em);
-            bosqueController.cargarBosques(em);
-            dragonController.cargarDragones(em);
-        } finally {
-            em.close();
-        }
-    }
-
 }
 
 
