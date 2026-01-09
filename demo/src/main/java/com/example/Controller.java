@@ -1,26 +1,23 @@
 package com.example;
 
-import com.example.Monstruo.TipoMonstruo;
-
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
 
 public class Controller {
 
     private Vista vista;
-
-    private Mago mago;
-    private Monstruo monstruo;
-    private Bosque bosque;
+    private MagoController magoController;
+    private MonstruoController monstruoController;
+    private BosqueController bosqueController;
+    private DragonController dragonController;
     private Hechizo hechizo;
-    // estados de edición
-    private Integer editarMagoId = null;
-    private Integer editarMonstruoId = null;
-    private Integer editarBosqueId = null;
-    private Integer editarDragonId = null;
 
 public Controller(Vista vista) {
         this.vista = vista;
+        this.magoController = new MagoController(vista);
+        this.monstruoController = new MonstruoController(vista);
+        this.bosqueController = new BosqueController(vista);
+        this.dragonController = new DragonController(vista);
 
         // al pulsar el botón GUARDAR
         vista.getBtnCrear().addActionListener(e -> guardar());
@@ -29,12 +26,12 @@ public Controller(Vista vista) {
         vista.getBtnBatalla().addActionListener(e -> pelear());
 
         // acciones de gestión (eliminar/editar)
-        vista.getBtnEliminarMago().addActionListener(e -> eliminarMago());
-        vista.getBtnModificarMago().addActionListener(e -> modificarMago());
-        vista.getBtnEliminarBosque().addActionListener(e -> eliminarBosque());
-        vista.getBtnModificarBosque().addActionListener(e -> modificarBosque());
-        vista.getBtnEliminarDragon().addActionListener(e -> eliminarDragon());
-        vista.getBtnModificarDragon().addActionListener(e -> modificarDragon());
+        vista.getBtnEliminarMago().addActionListener(e -> magoController.eliminarMago());
+        vista.getBtnModificarMago().addActionListener(e -> magoController.modificarMago());
+        vista.getBtnEliminarBosque().addActionListener(e -> bosqueController.eliminarBosque());
+        vista.getBtnModificarBosque().addActionListener(e -> bosqueController.modificarBosque());
+        vista.getBtnEliminarDragon().addActionListener(e -> dragonController.eliminarDragon());
+        vista.getBtnModificarDragon().addActionListener(e -> dragonController.modificarDragon());
 
         // cargar inicialmente listas desde BD
         cargarListas();
@@ -45,99 +42,10 @@ public Controller(Vista vista) {
         EntityTransaction tx = em.getTransaction();
         tx.begin();
 
-        // Crear o actualizar Mago si hay nombre
-        if (vista.getNombreMago() != null && !vista.getNombreMago().isBlank()) {
-            if (editarMagoId != null) {
-                Mago m = em.find(Mago.class, editarMagoId);
-                if (m != null) {
-                    m.setNombre(vista.getNombreMago());
-                    m.setVida(vista.getVidaMago());
-                    m.setNivelMagia(vista.getNivelMagia());
-                    // managed entity; changes flushed on commit
-                    vista.mostrarResultado("Mago actualizado: " + m.getNombre());
-                }
-                editarMagoId = null;
-            } else {
-                mago = new Mago(vista.getNombreMago(), vista.getVidaMago(), vista.getNivelMagia());
-                em.persist(mago);
-                vista.mostrarResultado("Mago creado: " + mago.getNombre());
-            }
-        }
-
-        // Crear o actualizar Monstruo
-        if (vista.getNombreMonstruo() != null && !vista.getNombreMonstruo().isBlank()) {
-            TipoMonstruo tipo = TipoMonstruo.valueOf(vista.getTipoMonstruo());
-            if (editarMonstruoId != null) {
-                Monstruo mo = em.find(Monstruo.class, editarMonstruoId);
-                if (mo != null) {
-                    mo.setNombre(vista.getNombreMonstruo());
-                    mo.setVida(vista.getVidaMonstruo());
-                    mo.setTipo(tipo);
-                    mo.setFuerza(vista.getFuerzaMonstruo());
-                    // managed entity; changes flushed on commit
-                    vista.mostrarResultado("Monstruo actualizado: " + mo.getNombre());
-                }
-                editarMonstruoId = null;
-            } else {
-                monstruo = new Monstruo(vista.getNombreMonstruo(), vista.getVidaMonstruo(), tipo, vista.getFuerzaMonstruo());
-                em.persist(monstruo);
-                vista.mostrarResultado("Monstruo creado: " + monstruo.getNombre());
-            }
-        }
-
-        // Crear o actualizar Dragon
-        if (vista.getNombreDragon() != null && !vista.getNombreDragon().isBlank()) {
-            if (editarDragonId != null) {
-                Dragon d = em.find(Dragon.class, editarDragonId);
-                if (d != null) {
-                    d.setNombre(vista.getNombreDragon());
-                    d.setIntensidadFuego(vista.getIntensidadDragon());
-                    d.setResistencia(vista.getResistenciaDragon());
-                    // managed entity; changes flushed on commit
-                    vista.mostrarResultado("Dragon actualizado: " + d.getNombre());
-                }
-                editarDragonId = null;
-            } else {
-                Dragon d = new Dragon(vista.getNombreDragon(), vista.getIntensidadDragon(), vista.getResistenciaDragon());
-                em.persist(d);
-                vista.mostrarResultado("Dragon creado: " + d.getNombre());
-            }
-        }
-
-        // Crear o actualizar Bosque (si hay nombre). Permite seleccionar jefe de la lista de monstruos
-        if (vista.getNombreBosque() != null && !vista.getNombreBosque().isBlank()) {
-            Monstruo jefe = null;
-            // si se ha seleccionado un monstruo en la lista de creación
-            try {
-                String sel = vista.getListMonstruos().getSelectedValue();
-                if (sel != null && sel.contains(" - ")) {
-                    int idSel = Integer.parseInt(sel.split(" - ")[0]);
-                    jefe = em.find(Monstruo.class, idSel);
-                }
-            } catch (Exception ex) {
-                // ignorar
-            }
-
-            if (editarBosqueId != null) {
-                Bosque b = em.find(Bosque.class, editarBosqueId);
-                if (b != null) {
-                    b.setNombre(vista.getNombreBosque());
-                    b.setPeligro(vista.getPeligroBosque());
-                    if (jefe != null) b.setMonstruo(jefe);
-                    // managed entity; changes flushed on commit
-                    vista.mostrarResultado("Bosque actualizado: " + b.getNombre());
-                }
-                editarBosqueId = null;
-            } else {
-                Bosque b = new Bosque(vista.getNombreBosque(), vista.getPeligroBosque(), jefe);
-                em.persist(b);
-                // si hay jefe, asociarlo (jefe está gestionado si fue obtenido con em.find)
-                if (jefe != null) {
-                    jefe.setBosque(b);
-                }
-                vista.mostrarResultado("Bosque creado: " + b.getNombre());
-            }
-        }
+        magoController.guardarMago(em);
+        monstruoController.guardarMonstruo(em);
+        dragonController.guardarDragon(em);
+        bosqueController.guardarBosque(em);
 
         tx.commit();
         em.close();
@@ -209,96 +117,15 @@ public Controller(Vista vista) {
     private void cargarListas() {
         EntityManager em = HibernateUtil.getEntityManager();
         try {
-            java.util.List<Mago> magos = em.createQuery("from Mago", Mago.class).getResultList();
-            java.util.List<Monstruo> monstruos = em.createQuery("from Monstruo", Monstruo.class).getResultList();
-            java.util.List<Bosque> bosques = em.createQuery("from Bosque", Bosque.class).getResultList();
-            java.util.List<Dragon> dragones = em.createQuery("from Dragon", Dragon.class).getResultList();
-
-            vista.getListMagos().setListData(magos.stream().map(m -> m.getId() + " - " + m.getNombre()).toArray(String[]::new));
-            vista.getListMonstruos().setListData(monstruos.stream().map(m -> m.getId() + " - " + m.getNombre()).toArray(String[]::new));
-            vista.getListBosques().setListData(bosques.stream().map(b -> b.getId() + " - " + b.getNombre()).toArray(String[]::new));
-            vista.getListDragones().setListData(dragones.stream().map(d -> d.getId() + " - " + d.getNombre()).toArray(String[]::new));
-
-            // combos para batalla
-            vista.getCbSelMago().removeAllItems();
-            magos.forEach(m -> vista.getCbSelMago().addItem(m.getId() + " - " + m.getNombre()));
-            vista.getCbSelMonstruo().removeAllItems();
-            monstruos.forEach(m -> vista.getCbSelMonstruo().addItem(m.getId() + " - " + m.getNombre()));
-            vista.getCbSelBosque().removeAllItems();
-            bosques.forEach(b -> vista.getCbSelBosque().addItem(b.getId() + " - " + b.getNombre()));
-            vista.getCbSelDragon().removeAllItems();
-            dragones.forEach(d -> vista.getCbSelDragon().addItem(d.getId() + " - " + d.getNombre()));
+            magoController.cargarMagos(em);
+            monstruoController.cargarMonstruos(em);
+            bosqueController.cargarBosques(em);
+            dragonController.cargarDragones(em);
         } finally {
             em.close();
         }
     }
 
-    private void eliminarMago() {
-        String sel = vista.getListMagos().getSelectedValue();
-        if (sel == null) { vista.mostrarResultado("Selecciona un mago para eliminar."); return; }
-        int id = Integer.parseInt(sel.split(" - ")[0]);
-        EntityManager em = HibernateUtil.getEntityManager(); EntityTransaction tx = em.getTransaction(); tx.begin();
-        Mago m = em.find(Mago.class, id);
-        if (m != null) em.remove(m);
-        tx.commit(); em.close();
-        vista.mostrarResultado("Mago eliminado: " + sel);
-        cargarListas();
-    }
-
-    private void modificarMago() {
-        String sel = vista.getListMagos().getSelectedValue();
-        if (sel == null) { vista.mostrarResultado("Selecciona un mago para modificar."); return; }
-        int id = Integer.parseInt(sel.split(" - ")[0]);
-        EntityManager em = HibernateUtil.getEntityManager();
-        Mago m = em.find(Mago.class, id);
-        em.close();
-        if (m != null) {
-            // precargar campos de creación para editar
-            editarMagoId = id;
-            vista.mostrarResultado("Rellena campos y pulsa Guardar para actualizar el mago (id=" + id + ").");
-        }
-    }
-
-    private void eliminarBosque() {
-        String sel = vista.getListBosques().getSelectedValue();
-        if (sel == null) { vista.mostrarResultado("Selecciona un bosque para eliminar."); return; }
-        int id = Integer.parseInt(sel.split(" - ")[0]);
-        EntityManager em = HibernateUtil.getEntityManager(); EntityTransaction tx = em.getTransaction(); tx.begin();
-        Bosque b = em.find(Bosque.class, id);
-        if (b != null) em.remove(b);
-        tx.commit(); em.close();
-        vista.mostrarResultado("Bosque eliminado: " + sel);
-        cargarListas();
-    }
-
-    private void modificarBosque() {
-        String sel = vista.getListBosques().getSelectedValue();
-        if (sel == null) { vista.mostrarResultado("Selecciona un bosque para modificar."); return; }
-        int id = Integer.parseInt(sel.split(" - ")[0]);
-        editarBosqueId = id;
-        vista.mostrarResultado("Rellena campos y pulsa Guardar para actualizar el bosque (id=" + id + ").");
-    }
-
-    private void eliminarDragon() {
-        String sel = vista.getListDragones().getSelectedValue();
-        if (sel == null) { vista.mostrarResultado("Selecciona un dragon para eliminar."); return; }
-        int id = Integer.parseInt(sel.split(" - ")[0]);
-        EntityManager em = HibernateUtil.getEntityManager(); EntityTransaction tx = em.getTransaction(); tx.begin();
-        Dragon d = em.find(Dragon.class, id);
-        if (d != null) em.remove(d);
-        tx.commit(); em.close();
-        vista.mostrarResultado("Dragon eliminado: " + sel);
-        cargarListas();
-    }
-
-    private void modificarDragon() {
-        String sel = vista.getListDragones().getSelectedValue();
-        if (sel == null) { vista.mostrarResultado("Selecciona un dragon para modificar."); return; }
-        int id = Integer.parseInt(sel.split(" - ")[0]);
-        editarDragonId = id;
-        vista.mostrarResultado("Rellena campos y pulsa Guardar para actualizar el dragon (id=" + id + ").");
-    }
-
-    
 }
+
 
