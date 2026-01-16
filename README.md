@@ -35,6 +35,9 @@ Estas clases cooperan para modelar combates por turnos o secuenciales: los `Mago
 ## Diagrama de clases
 https://www.mermaidchart.com/d/aa83de10-9148-498b-bfeb-ccb5556aa792
 
+## PDF Capturas
+https://drive.google.com/file/d/1dXsblFsMwtsUbJ5RTOp2DqkEBrfSvv8Z/view?usp=sharing
+
 ## Diseño del juego
 - Mecánica: combates por turnos donde cada entidad puede realizar acciones (atacar, lanzar hechizo, usar habilidad). Los hechizos aplican efectos directos (daño/curación) o estados temporales.
 - Progresión: los `Mago` tienen `nivelMagia` que potencia los `Hechizo` o permite nuevos conjurios.
